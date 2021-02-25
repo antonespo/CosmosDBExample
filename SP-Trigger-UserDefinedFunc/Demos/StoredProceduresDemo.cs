@@ -15,9 +15,9 @@ namespace CosmosDb.ServerSide.Demos
     {
       Debugger.Break();
 
-      //await CreateStoredProcedures();
+      await CreateStoredProcedures();
 
-      //await ViewStoredProcedures();
+      await ViewStoredProcedures();
 
       await ExecuteStoredProcedures();
 
@@ -34,9 +34,9 @@ namespace CosmosDb.ServerSide.Demos
 
       await CreateStoredProcedure("spHelloWorld");
       await CreateStoredProcedure("spSetItaly");
-      //await CreateStoredProcedure("spGenerateId");
-      //await CreateStoredProcedure("spBulkInsert");
-      //await CreateStoredProcedure("spBulkDelete");
+      await CreateStoredProcedure("spGenerateId");
+      await CreateStoredProcedure("spBulkInsert");
+      await CreateStoredProcedure("spBulkDelete");
     }
 
     private async static Task CreateStoredProcedure(string sprocId)
@@ -87,8 +87,6 @@ namespace CosmosDb.ServerSide.Demos
 
       Console.Clear();
       await Execute_spSetItaly();
-      //await Execute_spSetNorthAmerica2();
-      //await Execute_spSetNorthAmerica3();
 
       Console.Clear();
       await Execute_spGenerateId();
@@ -153,72 +151,6 @@ namespace CosmosDb.ServerSide.Demos
       Console.WriteLine($" Is Italy = {isIT}");
 
       await container.DeleteItemAsync<dynamic>(id, pk);
-    }
-
-    private async static Task Execute_spSetNorthAmerica2()
-    {
-      Console.WriteLine();
-      Console.WriteLine("Execute spSetNorthAmerica (country = United Kingdom)");
-
-      // Should succeed with isNorthAmerica = false
-      var id = Guid.NewGuid().ToString();
-      dynamic documentDefinition = new
-      {
-        id,
-        name = "John Doe",
-        address = new
-        {
-          countryRegionName = "United Kingdom",
-          postalCode = "RG41 1QW"
-        }
-      };
-
-      var container = Shared.Client.GetContainer("mydb", "mystore");
-      var pk = new PartitionKey(documentDefinition.address.postalCode);
-      var result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
-      var document = result.Resource;
-
-      // Deserialize new document as JObject (use dictionary-style indexers to access dynamic properties)
-      var documentObject = JsonConvert.DeserializeObject(document.ToString());
-
-      var country = documentObject["address"]["countryRegionName"];
-      var isNA = documentObject["address"]["isNorthAmerica"];
-
-      Console.WriteLine("Result:");
-      Console.WriteLine($" Country = {country}");
-      Console.WriteLine($" Is North America = {isNA}");
-
-      await container.DeleteItemAsync<dynamic>(id, pk);
-    }
-
-    private async static Task Execute_spSetNorthAmerica3()
-    {
-      Console.WriteLine();
-      Console.WriteLine("Execute spSetNorthAmerica (no country)");
-
-      var id = Guid.NewGuid().ToString();
-      dynamic documentDefinition = new
-      {
-        id,
-        name = "James Smith",
-        address = new
-        {
-          postalCode = "12345"
-        }
-      };
-
-      var container = Shared.Client.GetContainer("mydb", "mystore");
-      var pk = new PartitionKey(documentDefinition.address.postalCode);
-
-      try
-      {
-        // Should fail with no country and enforceSchema = true
-        var result = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>("spSetNorthAmerica", pk, new[] { documentDefinition, true });
-      }
-      catch (CosmosException ex)
-      {
-        Console.WriteLine($"Error: {ex.Message}");
-      }
     }
 
     private async static Task Execute_spGenerateId()

@@ -1,7 +1,7 @@
 ﻿function spSetItaly(docToCreate, enforceSchema) {
     if (docToCreate.location !== undefined
         && docToCreate.location.state != undefined
-        && docToCreate.location.state != 'IT') {
+        && docToCreate.location.state == 'IT') {
         docToCreate.location.isItaly = true;
     }
     else if (enforceSchema) {
